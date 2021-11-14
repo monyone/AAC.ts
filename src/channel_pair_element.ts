@@ -6,7 +6,7 @@ export default class ChannelPairElement {
   readonly element_instance_tag: number;
   readonly common_window: boolean;
   readonly ics_info?: ICSInfo;
-  readonly ms_mask_present?: boolean;
+  readonly ms_mask_present?: number;
   readonly ms_used?: boolean[][];
   readonly left: IndividualChannelStream;
   readonly right: IndividualChannelStream;
@@ -16,8 +16,8 @@ export default class ChannelPairElement {
     this.common_window = stream.readBool();
     if (this.common_window) {
       this.ics_info = new ICSInfo(frequency_index, stream);
-      this.ms_mask_present = stream.readBool()
-      if (this.ms_mask_present) {
+      this.ms_mask_present = stream.readBits(2);
+      if (this.ms_mask_present === 1) {
         this.ms_used = [];
         for (let g = 0; g < this.ics_info.num_window_groups; g++) {
           this.ms_used.push([]);

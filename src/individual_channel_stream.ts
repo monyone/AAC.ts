@@ -21,7 +21,7 @@ export default class IndividualChannelStream {
     this.global_gain = stream.readBits(8);
     
     if (common_window != null) {
-      this.ics_info = new ICSInfo(freqency_index, stream);
+      this.ics_info = common_window;
     } else {
       this.ics_info = new ICSInfo(freqency_index, stream);
     }
