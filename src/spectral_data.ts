@@ -11,8 +11,14 @@ import ICSInfo from './ics_info';
 import ScalefactorData from './scalefactor_data';
 import SectionData from './section_data';
 
+const sign = (value: number) => {
+  if (value > 0) { return  1; }
+  if (value < 0) { return -1; }
+  return 0;
+}
+
 const IQ = (value: number) => {
-  return (value / Math.abs(value)) * Math.pow(Math.abs(value), 4 / 3);
+  return sign(value) * Math.pow(Math.abs(value), 4 / 3);
 }
 
 export default class SpectralData {
@@ -52,10 +58,10 @@ export default class SpectralData {
               }
             }
 
-            this.x_quant.push(IQ(w) * scale_factor_data.scalefactor[this.x_quant.length]);
-            this.x_quant.push(IQ(x) * scale_factor_data.scalefactor[this.x_quant.length]);
-            this.x_quant.push(IQ(y) * scale_factor_data.scalefactor[this.x_quant.length]);
-            this.x_quant.push(IQ(z) * scale_factor_data.scalefactor[this.x_quant.length]);
+            this.x_quant.push(IQ(w) * scale_factor_data.scalefactor[section_data.sect_start[g][i]]);
+            this.x_quant.push(IQ(x) * scale_factor_data.scalefactor[section_data.sect_start[g][i]]);
+            this.x_quant.push(IQ(y) * scale_factor_data.scalefactor[section_data.sect_start[g][i]]);
+            this.x_quant.push(IQ(z) * scale_factor_data.scalefactor[section_data.sect_start[g][i]]);
   
             k += 4;
           } else {
@@ -86,10 +92,10 @@ export default class SpectralData {
                     count++;
                   }
                   const escape_word = stream.readBits(count + 4);
-                  const escape_value = (y / Math.abs(y)) * (2 ** (count + 4) + escape_word);
-                  this.x_quant.push(IQ(escape_value) * scale_factor_data.scalefactor[this.x_quant.length]);
+                  const escape_value = sign(y) * (2 ** (count + 4) + escape_word);
+                  this.x_quant.push(IQ(escape_value) * scale_factor_data.scalefactor[section_data.sect_start[g][i]]);
               } else {
-                this.x_quant.push(IQ(y) * scale_factor_data.scalefactor[this.x_quant.length]);
+                this.x_quant.push(IQ(y) * scale_factor_data.scalefactor[section_data.sect_start[g][i]]);
               }
               if (Math.abs(z) === 16) {
                   let count = 0;
@@ -98,14 +104,14 @@ export default class SpectralData {
                     count++;
                   }
                   const escape_word = stream.readBits(count + 4);
-                  const escape_value = (z / Math.abs(z)) * (2 ** (count + 4) + escape_word);
-                  this.x_quant.push(IQ(escape_value) * scale_factor_data.scalefactor[this.x_quant.length]);  
+                  const escape_value = sign(z) * (2 ** (count + 4) + escape_word);
+                  this.x_quant.push(IQ(escape_value) * scale_factor_data.scalefactor[section_data.sect_start[g][i]]);
               } else {
-                this.x_quant.push(IQ(z) * scale_factor_data.scalefactor[this.x_quant.length]);  
+                this.x_quant.push(IQ(z) * scale_factor_data.scalefactor[section_data.sect_start[g][i]]);
               }
             } else {
-              this.x_quant.push(IQ(y) * scale_factor_data.scalefactor[this.x_quant.length]);
-              this.x_quant.push(IQ(z) * scale_factor_data.scalefactor[this.x_quant.length]);
+              this.x_quant.push(IQ(y) * scale_factor_data.scalefactor[section_data.sect_start[g][i]]);
+              this.x_quant.push(IQ(z) * scale_factor_data.scalefactor[section_data.sect_start[g][i]]);
             }
   
             k += 2;
