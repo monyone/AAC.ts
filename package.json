@@ -10,7 +10,7 @@
     "tsconfig.json"
   ],
   "author": "monyone <monyone.teihen@gmail.com>",
-  "description": "split dualmono stream to two mono stream",
+  "description": "AAC utils",
   "keywords": [],
   "repository": {
     "type": "git",

@@ -17,7 +17,7 @@ export default class ICSInfo {
   
   // other widely used value declared here
   readonly num_window_groups: number = 1;
-  readonly window_group_length: number[] = [];
+  readonly window_group_length: number[] = [1];
   readonly sect_sfb_offset: number[][] = [];
 
   public constructor (frequency_index: number, stream: BitStream) {
@@ -63,7 +63,7 @@ export default class ICSInfo {
 
         let offset = 0;
         for (let i = 0; i < this.max_sfb; i++) {
-          const width = (SCALEFACTOR_BANDS[frequency_index].swb_offset_short_window[i + 1] - SCALEFACTOR_BANDS[frequency_index].swb_offset_short_window[i + 1]) * this.window_group_length[g];
+          const width = (SCALEFACTOR_BANDS[frequency_index].swb_offset_short_window[i + 1] - SCALEFACTOR_BANDS[frequency_index].swb_offset_short_window[i]) * this.window_group_length[g];
           this.sect_sfb_offset[g].push(offset);
           offset += width;
         }
