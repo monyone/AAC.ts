@@ -63,7 +63,7 @@ const dctII = (x: number[]) => {
 
 export const imdct = (frequencies: number[]) => {
   const n = frequencies.length;
-  const input = [].concat(frequencies);
+  const input = frequencies.concat();
   const samples = Array(n * 2, 0);
 
   // cos値の変換用係数を掛け合わせ

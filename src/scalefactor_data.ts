@@ -28,7 +28,7 @@ export default class ScalefactorData {
           if (!tree) { throw new Error('No Huffman Code Available!'); }
 
           // TODO: USE HUFFMAN_SF_FUNC
-          const hcod_sf = HUFFMAN_SF_FUNC(tree.index);
+          const hcod_sf = HUFFMAN_SF_FUNC(tree.index!);
           scalefactor += hcod_sf;
           this.scalefactor.push(Math.pow(2, scalefactor - 100));
         }

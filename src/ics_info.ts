@@ -11,14 +11,14 @@ export default class ICSInfo {
   readonly max_sfb: number;
   readonly scale_factor_grouping: number;
   readonly predictor_data_present: boolean;
-  readonly predictor_reset: boolean;
+  readonly predictor_reset?: boolean;
   readonly predictor_reset_group_number?: number;
   readonly prediction_used?: boolean[];
   
   // other widely used value declared here
-  readonly num_window_groups: number;
-  readonly window_group_length: number[];
-  readonly sect_sfb_offset: number[][];
+  readonly num_window_groups: number = 1;
+  readonly window_group_length: number[] = [];
+  readonly sect_sfb_offset: number[][] = [];
 
   public constructor (frequency_index: number, stream: BitStream) {
     stream.readBits(1); // ics_reserved_bit (1)
@@ -28,8 +28,10 @@ export default class ICSInfo {
     if (this.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE) {
       this.max_sfb = stream.readBits(4);
       this.scale_factor_grouping = stream.readBits(7);
+      this.predictor_data_present = false;
     } else {
       this.max_sfb = stream.readBits(6);
+      this.scale_factor_grouping = 0; // fill value
       this.predictor_data_present = stream.readBool();
       if (this.predictor_data_present) {
         this.predictor_reset = stream.readBool();
@@ -46,8 +48,6 @@ export default class ICSInfo {
     }
 
     // other widely used value definision
-    this.num_window_groups = 1;
-    this.window_group_length = [1];
     if (this.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE) {
       for (let i = 0; i < 7; i++) {
         if ((this.scale_factor_grouping & (1 << (6 - i))) === 0) {

@@ -1,0 +1,30 @@
+{
+  "name": "@monyone/AAC.ts",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "types": "d.ts/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "d.ts/**/*",
+    "src/**/*",
+    "tsconfig.json"
+  ],
+  "author": "monyone <monyone.teihen@gmail.com>",
+  "description": "split dualmono stream to two mono stream",
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/monyone/aac.ts"
+  },
+  "license": "MIT",
+  "scripts": {
+    "tsc": "tsc",
+    "build": "npm-run-all clean tsc",
+    "clean": "rimraf dist d.ts"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.4.4"
+  }
+}

@@ -27,7 +27,7 @@ export default class ChannelPairElement {
         }
       }
     }
-    this.left = new IndividualChannelStream(frequency_index, this.ics_info, stream);
-    this.right = new IndividualChannelStream(frequency_index, this.ics_info, stream);
+    this.left = new IndividualChannelStream(frequency_index, this.ics_info ?? null, stream);
+    this.right = new IndividualChannelStream(frequency_index, this.ics_info ?? null, stream);
   }
 }

@@ -12,7 +12,7 @@ import ScalefactorData from './scalefactor_data';
 import SectionData from './section_data';
 
 const IQ = (value: number) => {
-  return Math.sign(value) * Math.pow(Math.abs(value), 4 / 3);
+  return (value / Math.abs(value)) * Math.pow(Math.abs(value), 4 / 3);
 }
 
 export default class SpectralData {
@@ -86,7 +86,7 @@ export default class SpectralData {
                     count++;
                   }
                   const escape_word = stream.readBits(count + 4);
-                  const escape_value = Math.sign(y) * (2 ** (count + 4) + escape_word);
+                  const escape_value = (y / Math.abs(y)) * (2 ** (count + 4) + escape_word);
                   this.x_quant.push(IQ(escape_value) * scale_factor_data.scalefactor[this.x_quant.length]);
               } else {
                 this.x_quant.push(IQ(y) * scale_factor_data.scalefactor[this.x_quant.length]);
@@ -98,7 +98,7 @@ export default class SpectralData {
                     count++;
                   }
                   const escape_word = stream.readBits(count + 4);
-                  const escape_value = Math.sign(z) * (2 ** (count + 4) + escape_word);
+                  const escape_value = (z / Math.abs(z)) * (2 ** (count + 4) + escape_word);
                   this.x_quant.push(IQ(escape_value) * scale_factor_data.scalefactor[this.x_quant.length]);  
               } else {
                 this.x_quant.push(IQ(z) * scale_factor_data.scalefactor[this.x_quant.length]);  
