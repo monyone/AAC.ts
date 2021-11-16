@@ -1,15 +1,17 @@
 import { parseADTSHeader } from './atds';
 import BitStream from './bitstream';
 import { SyntaxticElementIdentification } from './constant';
+import { imdct } from './mdct';
 import ProgramConfigElement from './program_config_element';
 import FillElement from './fill_element';
 import SingleChannelElement from './single_channel_element';
 import ChannelPairElement from './channel_pair_element';
+import { SIN_WINDOW } from './window_function';
 
 export default class Decoder {
   readonly overwrap: number[] = [];
 
-  public decode(binary: ArrayBuffer) {
+  public decode(binary: ArrayBuffer): number[] | null {
     const {
       syncword,
       mpeg_version,
@@ -87,6 +89,22 @@ export default class Decoder {
           break;
       }
       if (id_syn_ele === SyntaxticElementIdentification.ID_END) { break; }
+    }
+
+    if (sce1) {
+      const x_quant = sce1.single.spectral_data.x_quant;
+      for (let i = x_quant.length; i < 1024; i++) { x_quant.push(0); }
+      const samples = imdct(x_quant);
+      return SIN_WINDOW(samples.length).map((elem, index) => {
+        return samples[index] * elem;
+      });
+    } else if (sce2) {
+      const samples = imdct(sce2.single.spectral_data.x_quant);
+      return SIN_WINDOW(samples.length).map((elem, index) => {
+        return samples[index] * elem;
+      });
+    } else {
+      return null;
     }
   }
 }

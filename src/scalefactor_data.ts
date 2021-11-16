@@ -30,7 +30,7 @@ export default class ScalefactorData {
           // TODO: USE HUFFMAN_SF_FUNC
           const hcod_sf = HUFFMAN_SF_FUNC(tree.index!);
           scalefactor += hcod_sf;
-          this.scalefactor.push(Math.pow(2, scalefactor - 100));
+          this.scalefactor.push(Math.pow(2, (scalefactor - 100) / 4));
         }
       }
     }
