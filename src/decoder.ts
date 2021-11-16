@@ -6,10 +6,10 @@ import ProgramConfigElement from './program_config_element';
 import FillElement from './fill_element';
 import SingleChannelElement from './single_channel_element';
 import ChannelPairElement from './channel_pair_element';
-import { SIN_WINDOW } from './window_function';
+import { SIN_WINDOW, KBD_WINDOW } from './window_function';
 
 export default class Decoder {
-  readonly overwrap: number[] = [];
+  private overlap: number[] | null = null;
 
   public decode(binary: ArrayBuffer): number[] | null {
     const {
@@ -94,10 +94,22 @@ export default class Decoder {
     if (sce1) {
       const x_quant = sce1.single.spectral_data.x_quant;
       for (let i = x_quant.length; i < 1024; i++) { x_quant.push(0); }
+      
       const samples = imdct(x_quant);
-      return SIN_WINDOW(samples.length).map((elem, index) => {
-        return samples[index] * elem;
-      });
+      const window = SIN_WINDOW(samples.length);
+      //const window = KBD_WINDOW(samples.length, 4);
+      for (let i = 0; i < samples.length; i++) { samples[i] *= window[i]; }
+
+      /*      
+      if (this.overlap !== null) {
+        for (let i = 0; i < samples.length / 2; i++) {
+          samples[i] += this.overlap[i + samples.length / 2];
+        }
+      }
+      this.overlap = samples;
+      */
+
+      return samples;
     } else if (sce2) {
       const samples = imdct(sce2.single.spectral_data.x_quant);
       return SIN_WINDOW(samples.length).map((elem, index) => {
