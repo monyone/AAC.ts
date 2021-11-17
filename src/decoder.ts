@@ -1,4 +1,4 @@
-import { parseADTSHeader } from './atds';
+import { parseADTSHeader } from './adts';
 import BitStream from './bitstream';
 import { SyntaxticElementIdentification } from './constant';
 import { imdct } from './mdct';
