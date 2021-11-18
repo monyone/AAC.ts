@@ -1,6 +1,6 @@
 import { parseADTSHeader } from './adts';
 import BitStream from './bitstream';
-import { SyntaxticElementIdentification } from './constant';
+import { WINDOW_SEQUENCES, SyntaxticElementIdentification } from './constant';
 import { imdct } from './mdct';
 import ProgramConfigElement from './program_config_element';
 import FillElement from './fill_element';
@@ -92,10 +92,25 @@ export default class Decoder {
     }
 
     if (sce1) {
-      const x_quant = sce1.single.spectral_data.x_quant;
-      for (let i = x_quant.length; i < 1024; i++) { x_quant.push(0); }
+      let samples = [];
+      if (sce1.single.ics_info.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE) { 
+         let short_samples: number[][] = [];
+         for (let g = sce1.single.ics_info.num_window_groups; g < 8; g++) {
+           short_samples.push([]);
+         }
+         for (let g = 0; g < sce1.single.ics_info.num_window_groups; g++) {
+           short_samples[g] = [...sce1.single.spectral_data.x_quant[g]];
+         }
+         for (let g = 0; g < 8; g++) {
+           while (short_samples[g].length < 128) { short_samples[g].push(0); }
+           samples.push(...imdct(short_samples[g]));
+         }
+      } else {
+        const frequencies = [...sce1.single.spectral_data.x_quant[0]]
+        for (let i = frequencies.length; i < 1024; i++) { frequencies.push(0); }
+        samples = imdct(frequencies);
+      }
 
-      const samples = imdct(x_quant);
       const window = SIN_WINDOW(samples.length);
       //const window = KBD_WINDOW(samples.length, 4);
       for (let i = 0; i < samples.length; i++) { samples[i] *= window[i]; }
@@ -109,10 +124,7 @@ export default class Decoder {
 
       return samples.slice(0, 1024);
     } else if (sce2) {
-      const samples = imdct(sce2.single.spectral_data.x_quant);
-      return SIN_WINDOW(samples.length).map((elem, index) => {
-        return samples[index] * elem;
-      });
+      return null;
     } else {
       return null;
     }
