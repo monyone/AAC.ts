@@ -95,11 +95,11 @@ export default class Decoder {
       let samples = [];
       if (sce1.single.ics_info.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE) { 
          let short_samples: number[][] = [];
-         for (let g = sce1.single.ics_info.num_window_groups; g < 8; g++) {
-           short_samples.push([]);
-         }
          for (let g = 0; g < sce1.single.ics_info.num_window_groups; g++) {
            short_samples[g] = [...sce1.single.spectral_data.x_quant[g]];
+         }
+         for (let g = short_samples.length; g < 8; g++) {
+           short_samples.push([]);
          }
          for (let g = 0; g < 8; g++) {
            while (short_samples[g].length < 128) { short_samples[g].push(0); }
