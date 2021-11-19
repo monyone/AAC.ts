@@ -16,6 +16,7 @@ export default class ICSInfo {
   readonly prediction_used?: boolean[];
   
   // other widely used value declared here
+  readonly num_windows: number = 1;
   readonly num_window_groups: number = 1;
   readonly window_group_length: number[] = [1];
   readonly sect_sfb_offset: number[][] = [];
@@ -49,6 +50,8 @@ export default class ICSInfo {
 
     // other widely used value definision
     if (this.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE) {
+      this.num_windows = 8;
+
       for (let i = 0; i < 7; i++) {
         if ((this.scale_factor_grouping & (1 << (6 - i))) === 0) {
           this.num_window_groups += 1;
@@ -60,14 +63,9 @@ export default class ICSInfo {
 
       for (let g = 0; g < this.num_window_groups; g++) {
         this.sect_sfb_offset.push([]);
-
-        let offset = 0;
-        for (let i = 0; i < this.max_sfb; i++) {
-          const width = (SCALEFACTOR_BANDS[frequency_index].swb_offset_short_window[i + 1] - SCALEFACTOR_BANDS[frequency_index].swb_offset_short_window[i]) * this.window_group_length[g];
-          this.sect_sfb_offset[g].push(offset);
-          offset += width;
+        for (let i = 0; i < this.max_sfb + 1; i++) {
+          this.sect_sfb_offset[g].push(SCALEFACTOR_BANDS[frequency_index].swb_offset_short_window[i]);
         }
-        this.sect_sfb_offset[g].push(offset);
       }
     } else {
       this.sect_sfb_offset.push([]);

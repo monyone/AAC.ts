@@ -92,37 +92,49 @@ export default class Decoder {
     }
 
     if (sce1) {
-      let samples = [];
       if (sce1.single.ics_info.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE) { 
-         let short_samples: number[][] = [];
-         for (let g = 0; g < sce1.single.ics_info.num_window_groups; g++) {
-           short_samples[g] = [...sce1.single.spectral_data.x_quant[g]];
-         }
-         for (let g = short_samples.length; g < 8; g++) {
-           short_samples.push([]);
-         }
-         for (let g = 0; g < 8; g++) {
-           while (short_samples[g].length < 128) { short_samples[g].push(0); }
-           samples.push(...imdct(short_samples[g]));
-         }
+        const short_samples: number[][] = [];
+        const imdct_result: number[] = [];
+        const samples: number[] = [];
+
+        for (let w = 0; w < sce1.single.ics_info.num_windows; w++) {
+          short_samples.push([...sce1.single.spectral_data.x_quant[w]]);
+          while (short_samples[w].length < 128) { short_samples[w].push(0); }
+          const result = imdct(short_samples[w]);
+          const window = SIN_WINDOW(result.length);
+          for (let i = 0; i < result.length; i++) {
+            imdct_result.push(result[i] * window[i]);
+          }
+        }
+        for (let g = 0; g < 4; g++) {
+          for (let i = 0; i < 128; i++) {
+            if (g === 0) {
+              samples.push(imdct_result[128 * (2 * g) + i])
+            } else{
+              samples.push(imdct_result[128 * (2 * g - 1) + i] + imdct_result[128 * (2 * g) + i])
+            }
+          }
+        }
+
+        this.overlap = null;
+        return samples;
       } else {
         const frequencies = [...sce1.single.spectral_data.x_quant[0]]
         for (let i = frequencies.length; i < 1024; i++) { frequencies.push(0); }
-        samples = imdct(frequencies);
-      }
+        const samples: number[] = imdct(frequencies);
 
-      const window = SIN_WINDOW(samples.length);
-      //const window = KBD_WINDOW(samples.length, 4);
-      for (let i = 0; i < samples.length; i++) { samples[i] *= window[i]; }
+        const window = SIN_WINDOW(samples.length);
+        //const window = KBD_WINDOW(samples.length, 4);
+        for (let i = 0; i < samples.length; i++) { samples[i] *= window[i]; }
 
-      if (this.overlap !== null) {
-        for (let i = 0; i < samples.length / 2; i++) {
-          samples[i] += this.overlap[i];
+        if (this.overlap !== null) {
+          for (let i = 0; i < samples.length / 2; i++) {
+            samples[i] += this.overlap[i];
+          }
         }
+        this.overlap = samples.slice(1024);
+        return samples.slice(0, 1024);
       }
-      this.overlap = samples.slice(1024);
-
-      return samples.slice(0, 1024);
     } else if (sce2) {
       return null;
     } else {
