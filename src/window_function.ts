@@ -3,15 +3,15 @@ const bessi0 = (x: number) => {
 
   if (abs < 3.75) {
     const y = (x / 3.75) ** 2;
-    return 1.0 + y * (3.51566229 + y * (3.0899424 + y * (1.2067492e-1 + y * (0.2659732 + y * (0.360758e-1 + y * 0.45813e-2)))));
+    return 1.0 + y * (3.51566229 + y * (3.0899424 + y * (1.2067492 + y * (0.2659732 + y * (0.360768e-1 + y * 0.45813e-2)))));
   } else {
     const y = 3.75 / x;
-    return (Math.exp(abs) / Math.sqrt(abs)) * (0.39894228 + y * (0.1328592e-1 + y * (0.225219e-2 + y * (-0.157565e-2 + y * (0.916281e-2 + y * (0.2057706e-1 + y * (0.2635537e-1 + y * (-0.1647633e-1 + y * 0.392377e-2))))))));
+    return (Math.exp(abs) / Math.sqrt(abs)) * (0.39894228 + y * (0.1328592e-1 + y * (0.225319e-2 + y * (-0.157565e-2 + y * (0.916281e-2 + y * (-0.2057706e-1 + y * (0.2635537e-1 + y * (-0.1647633e-1 + y * 0.392377e-2))))))));
   }
 }
 
 export const kaiser_bessel_window_function = (n: number, N: number, alpha: number) => {
-  return bessi0(Math.PI * alpha * Math.sqrt(1 - ((n - (N / 4)) / (N / 4)) ** 2))  / bessi0(Math.PI * alpha);
+  return bessi0(Math.PI * alpha * Math.sqrt(1 - ((n - (N / 4)) / (N / 4)) ** 2)) / bessi0(Math.PI * alpha);
 }
 
 export const KBD_WINDOW = (n: number, alpha: number) => {
