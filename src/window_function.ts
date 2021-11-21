@@ -11,7 +11,7 @@ const bessi0 = (x: number) => {
 }
 
 export const kaiser_bessel_window_function = (n: number, N: number, alpha: number) => {
-  return bessi0(Math.PI * alpha * Math.sqrt(1 - ((n - N / 4) / (N / 4)))) / bessi0(Math.PI * alpha);
+  return bessi0(Math.PI * alpha * Math.sqrt(1 - ((n - (N / 4)) / (N / 4)) ** 2))  / bessi0(Math.PI * alpha);
 }
 
 export const KBD_WINDOW = (n: number, alpha: number) => {
@@ -28,10 +28,8 @@ export const KBD_WINDOW = (n: number, alpha: number) => {
     }
   }
   {
-    let nom = 0;
-    for (let i = n / 2 -1 ; i >= 0; i--) {
-      nom += kaiser_bessel_window_function(i, n, alpha);
-      window.push(Math.sqrt(nom / denom));
+    for (let i = n / 2 - 1; i >= 0; i--) {
+      window.push(window[i]);
     }
   }
 
