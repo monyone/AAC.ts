@@ -1,6 +1,7 @@
 import { 
   WINDOW_SEQUENCES,
   UPPER_SPECTRAL_LIMIT_FOR_PREDICTION,
+  WINDOW_SEQUENCES_TO_NUM_WINDOWS,
   SCALEFACTOR_BANDS,
 } from './constant';
 import BitStream from './bitstream';
@@ -49,9 +50,8 @@ export default class ICSInfo {
     }
 
     // other widely used value definision
+    this.num_windows = WINDOW_SEQUENCES_TO_NUM_WINDOWS[this.window_sequence];
     if (this.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE) {
-      this.num_windows = 8;
-
       for (let i = 0; i < 7; i++) {
         if ((this.scale_factor_grouping & (1 << (6 - i))) === 0) {
           this.num_window_groups += 1;
