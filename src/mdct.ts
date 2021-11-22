@@ -1,63 +1,21 @@
 // とりあえずこれを使ってる: https://github.com/redlily/training-webaudio-compression
 
-const swap = (v: number[], a: number, b:number) => {
-  const t = v[a];
-  v[a] = v[b];
-  v[b] = t;
-}
-
-const swapElements = (x: number[]) => {
-  const n = x.length;
-  const nh = n >> 1;
-  const nh1 = nh + 1;
-  const nq = n >> 2;
-  for (let i = 0, j = 0; i < nh; i += 2) {
-    swap(x, i + nh, j + 1);
-    if (i < j) {
-      swap(x, i + nh1, j + nh1);
-      swap(x, i, j);
-    }
-
-    // ビットオーダを反転した変数としてインクリメント
-    for (let k = nq; (j ^= k) < k; k >>= 1) {}
-  }
-}
-
 const dctII = (x: number[]) => {
-  // バタフライ演算
   const n = x.length;
-  let rad = Math.PI / (n << 1);
-  for (let m = n, mh = m >> 1; 1 < m; m = mh, mh >>= 1) {
-    for (let i = 0; i < mh; i++) {
-      let cs = 2.0 * Math.cos(rad * ((i << 1) + 1));
-      for (let j = i, k = (m - 1) - i; j < n; j += m, k += m) {
-        let x0 = x[j];
-        let x1 = x[k];
-        x[j] = x0 + x1;
-        x[k] = (x0 - x1) * cs;
-      }
-    }
-    rad *= 2.0;
+  if (n === 1) { return x; }
+
+  const even: number[] = [], odd: number[] = [];
+  for (let i = 0; i < n / 2; i++) {
+    even.push((x[i] + x[(n - 1) - i]));
+    odd.push((x[i] - x[(n - 1) - i]) / (2 * Math.cos(Math.PI * (2 * i + 1) / (2 * n))));
   }
 
-  // データの入れ替え
-  swapElements(x);
+  dctII(even);
+  dctII(odd); odd.push(0);
 
-  // 差分方程式
-  for (let m = n, mh = m >> 1, mq = mh >> 1; 2 < m; m = mh, mh = mq, mq >>= 1) {
-    for (let i = mq + mh; i < m; i++) {
-      let xt = (x[i] = -x[i] - x[i - mh]);
-      for (let j = i + mh; j < n; j += m) {
-        let k = j + mh;
-        xt = (x[j] -= xt);
-        xt = (x[k] = -x[k] - xt);
-      }
-    }
-  }
-
-  // スケーリング
-  for (let i = 1; i < n; ++i) {
-    x[i] *= 0.5;
+  for (let i = 0; i < n / 2; i++) {
+    x[i * 2 + 0] = even[i];
+    x[i * 2 + 1] = odd[i + 0] + odd[i + 1];
   }
 }
 
