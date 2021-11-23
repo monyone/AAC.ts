@@ -11,14 +11,13 @@ export default class TNSData {
   readonly coef: number[][][] = [];
 
   public constructor(ics_info: ICSInfo, stream: BitStream) {
-    const num_windows = ics_info.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE ? 8 : 1;
     const n_filt_bits = ics_info.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE ? 1 : 2;
     const length_bits = ics_info.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE ? 4 : 6;
     const order_bits = ics_info.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE ? 3 : 5;
 
-    for (let w = 0; w < num_windows; w++) {
+    for (let w = 0; w < ics_info.num_windows; w++) {
       const n_filt = stream.readBits(n_filt_bits);
-      this.n_filt.push(stream.readBits(n_filt_bits));
+      this.n_filt.push(n_filt);
       
       this.length.push([]);
       this.order.push([]);
