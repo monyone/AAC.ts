@@ -16,9 +16,9 @@ export default class ScalefactorData {
         if (section_data.sfb_cb[g][sfb] === HCB.ZERO_HCB) {        
           this.scalefactor.push(0);
           continue;
-        } else if (section_data.sect_cb[g][sfb] === HCB.INTENSITY_HCB || section_data.sect_cb[g][sfb] === HCB.INTENSITY_HCB2) {
+        } else if (section_data.sfb_cb[g][sfb] === HCB.INTENSITY_HCB || section_data.sfb_cb[g][sfb] === HCB.INTENSITY_HCB2) {
           throw new Error('Not implemented yet.')
-        } else if (section_data.sect_cb[g][sfb] === HCB.NOISE_HCB) {
+        } else if (section_data.sfb_cb[g][sfb] === HCB.NOISE_HCB) {
           throw new Error('Not implemented yet.')
         } else {   
           let tree: BinarySearchTree | null = HUFFMAN_SF;
@@ -27,7 +27,6 @@ export default class ScalefactorData {
           }
           if (!tree) { throw new Error('No Huffman Code Available!'); }
 
-          // TODO: USE HUFFMAN_SF_FUNC
           const hcod_sf = HUFFMAN_SF_FUNC(tree.index!);
           scalefactor += hcod_sf;
           this.scalefactor.push(Math.pow(2, (scalefactor - 100) / 4));
