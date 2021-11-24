@@ -39,7 +39,8 @@ export default class SpectralData {
                 this.x_quant[window].push(0);
                 k++;
               } else if (section_data.sect_cb[g][i] === HCB.NOISE_HCB) {
-                throw new Error('Not implemented yet.')
+                this.x_quant[window].push(Math.random() * scale_factor_data.scalefactor[sfb]);
+                k++;
               } else if (section_data.sect_cb[g][i] < HCB.FIRST_PAIR_HCB) {
                 const index = section_data.sect_cb[g][i] - 1;
   
