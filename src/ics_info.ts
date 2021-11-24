@@ -38,7 +38,7 @@ export default class ICSInfo {
       if (this.predictor_data_present) {
         this.predictor_reset = stream.readBool();
         if (this.predictor_reset) {
-          this.predictor_reset_group_number = stream.readBits(6);
+          this.predictor_reset_group_number = stream.readBits(5);
         }
 
         const Pred_SFB_MAX = UPPER_SPECTRAL_LIMIT_FOR_PREDICTION[frequency_index].Pred_SFB_MAX;
