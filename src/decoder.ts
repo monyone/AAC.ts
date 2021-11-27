@@ -158,7 +158,7 @@ export default class Decoder {
 
         const short_samples: number[][] = [];
 
-        const curr_window = (this.prev_window_shape[0] ?? sce1.single.ics_info.window_shape) == 0 ? SIN_WINDOW(coeff * 2) : KBD_WINDOW(coeff * 2, 4);
+        const curr_window = (this.prev_window_shape[0] ?? sce1.single.ics_info.window_shape) == 0 ? SIN_WINDOW(coeff * 2) : KBD_WINDOW(coeff * 2, 6);
         const next_window = sce1.single.ics_info.window_shape == 0 ? SIN_WINDOW(coeff * 2) : KBD_WINDOW(coeff * 2, 6);
 
         for (let w = 0; w < sce1.single.ics_info.num_windows; w++) {
@@ -209,12 +209,10 @@ export default class Decoder {
             samples[i] *= 1;
           }
         }
-        for (let i = 0; i < coeff; i++) {
-          samples[i] *= next_window[coeff];
-        }
         for (let i = coeff; i < coeff * 2; i++) {
           samples[i] *= next_window[i];
         }
+
         if (this.overlap[0] != null) {
           for (let i = 0; i < coeff; i++) { samples[i] += this.overlap[0][i]; }
         }
