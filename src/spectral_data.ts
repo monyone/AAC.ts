@@ -39,7 +39,7 @@ export default class SpectralData {
                 this.x_quant[window].push(0);
                 k++;
               } else if (section_data.sect_cb[g][i] === HCB.NOISE_HCB) {
-                this.x_quant[window].push(Math.random() * scale_factor_data.scalefactor[sfb]);
+                this.x_quant[window].push(Math.random() * scale_factor_data.scalefactor[g][sfb]);
                 k++;
               } else if (section_data.sect_cb[g][i] < HCB.FIRST_PAIR_HCB) {
                 const index = section_data.sect_cb[g][i] - 1;
@@ -66,10 +66,10 @@ export default class SpectralData {
                   }
                 }
 
-                this.x_quant[window].push(IQ(w) * scale_factor_data.scalefactor[sfb]);
-                this.x_quant[window].push(IQ(x) * scale_factor_data.scalefactor[sfb]);
-                this.x_quant[window].push(IQ(y) * scale_factor_data.scalefactor[sfb]);
-                this.x_quant[window].push(IQ(z) * scale_factor_data.scalefactor[sfb]);
+                this.x_quant[window].push(IQ(w) * scale_factor_data.scalefactor[g][sfb]);
+                this.x_quant[window].push(IQ(x) * scale_factor_data.scalefactor[g][sfb]);
+                this.x_quant[window].push(IQ(y) * scale_factor_data.scalefactor[g][sfb]);
+                this.x_quant[window].push(IQ(z) * scale_factor_data.scalefactor[g][sfb]);
   
                 k += 4;
               } else {
@@ -101,9 +101,9 @@ export default class SpectralData {
                       }
                       const escape_word = stream.readBits(count + 4);
                       const escape_value = sign(y) * (2 ** (count + 4) + escape_word);
-                      this.x_quant[window].push(IQ(escape_value) * scale_factor_data.scalefactor[sfb]);
+                      this.x_quant[window].push(IQ(escape_value) * scale_factor_data.scalefactor[g][sfb]);
                   } else {
-                    this.x_quant[window].push(IQ(y) * scale_factor_data.scalefactor[sfb]);
+                    this.x_quant[window].push(IQ(y) * scale_factor_data.scalefactor[g][sfb]);
                   }
                   if (Math.abs(z) === 16) {
                     let count = 0;
@@ -113,13 +113,13 @@ export default class SpectralData {
                     }
                     const escape_word = stream.readBits(count + 4);
                     const escape_value = sign(z) * (2 ** (count + 4) + escape_word);
-                    this.x_quant[window].push(IQ(escape_value) * scale_factor_data.scalefactor[sfb]);
+                    this.x_quant[window].push(IQ(escape_value) * scale_factor_data.scalefactor[g][sfb]);
                   } else {
-                    this.x_quant[window].push(IQ(z) * scale_factor_data.scalefactor[sfb]);
+                    this.x_quant[window].push(IQ(z) * scale_factor_data.scalefactor[g][sfb]);
                   }
                 } else {
-                  this.x_quant[window].push(IQ(y) * scale_factor_data.scalefactor[sfb]);
-                  this.x_quant[window].push(IQ(z) * scale_factor_data.scalefactor[sfb]);
+                  this.x_quant[window].push(IQ(y) * scale_factor_data.scalefactor[g][sfb]);
+                  this.x_quant[window].push(IQ(z) * scale_factor_data.scalefactor[g][sfb]);
                 }
   
                 k += 2;
