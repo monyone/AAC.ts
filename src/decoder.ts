@@ -1,6 +1,11 @@
 import { parseADTSHeader } from './adts';
 import BitStream from './bitstream';
-import { WINDOW_SEQUENCES, SyntaxticElementIdentification } from './constant';
+import {
+  TRANSFORM_WINDOWS,
+  WINDOW_SEQUENCES,
+  SyntaxticElementIdentification,
+  WINDOW_SEQUENCES_TO_TRANSFORM_MODE,
+} from './constant';
 import { imdct } from './mdct';
 import ProgramConfigElement from './program_config_element';
 import FillElement from './fill_element';
@@ -9,7 +14,8 @@ import ChannelPairElement from './channel_pair_element';
 import { SIN_WINDOW, KBD_WINDOW } from './window_function';
 
 export default class Decoder {
-  private overlap: number[] | null = null;
+  private overlap: (number[] | null)[] = [null];
+  private prev_window_shape: (number | null)[] = [null];
 
   public decode(binary: ArrayBuffer): number[] | null {
     const {
@@ -92,48 +98,133 @@ export default class Decoder {
     }
 
     if (sce1) {
-      if (sce1.single.ics_info.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE) { 
-        const short_samples: number[][] = [];
-        const imdct_result: number[] = [];
-        const samples: number[] = [];
+      if (sce1.single.ics_info.window_sequence === WINDOW_SEQUENCES.ONLY_LONG_SEQUENCE) {
+        const coeff = WINDOW_SEQUENCES_TO_TRANSFORM_MODE[sce1.single.ics_info.window_sequence].coeffs;
 
-        for (let w = 0; w < sce1.single.ics_info.num_windows; w++) {
-          short_samples.push([...sce1.single.spectral_data.x_quant[w]]);
-          while (short_samples[w].length < 128) { short_samples[w].push(0); }
-          const result = imdct(short_samples[w]);
-          const window = SIN_WINDOW(result.length);
-          for (let i = 0; i < result.length; i++) {
-            imdct_result.push(result[i] * window[i]);
-          }
-        }
-        for (let g = 0; g < 4; g++) {
-          for (let i = 0; i < 128; i++) {
-            if (g === 0) {
-              samples.push(imdct_result[128 * (2 * g) + i])
-            } else{
-              samples.push(imdct_result[128 * (2 * g - 1) + i] + imdct_result[128 * (2 * g) + i])
-            }
-          }
-        }
-
-        this.overlap = null;
-        return samples;
-      } else {
         const frequencies = [...sce1.single.spectral_data.x_quant[0]]
-        for (let i = frequencies.length; i < 1024; i++) { frequencies.push(0); }
+        for (let i = frequencies.length; i < coeff; i++) { frequencies.push(0); }
         const samples: number[] = imdct(frequencies);
 
-        const window = SIN_WINDOW(samples.length);
-        //const window = KBD_WINDOW(samples.length, 4);
-        for (let i = 0; i < samples.length; i++) { samples[i] *= window[i]; }
+        const curr_window = (this.prev_window_shape[0] ?? sce1.single.ics_info.window_shape) == 0 ? SIN_WINDOW(coeff * 2) : KBD_WINDOW(coeff * 2, 4);
+        const next_window = sce1.single.ics_info.window_shape == 0 ? SIN_WINDOW(coeff * 2) : KBD_WINDOW(coeff * 2, 4);
+        for (let i =     0; i < coeff    ; i++) { samples[i] *= curr_window[i]; }
+        for (let i = coeff; i < coeff * 2; i++) { samples[i] *= next_window[i]; }
 
-        if (this.overlap !== null) {
-          for (let i = 0; i < samples.length / 2; i++) {
-            samples[i] += this.overlap[i];
+        if (this.overlap[0] != null) {
+          for (let i = 0; i < coeff; i++) { samples[i] += this.overlap[0][i]; }
+        }
+
+        this.overlap[0] = samples.slice(coeff, coeff * 2);
+        this.prev_window_shape[0] = sce1.single.ics_info.window_shape;
+
+        return samples.slice(0, coeff);
+      } else if (sce1.single.ics_info.window_sequence === WINDOW_SEQUENCES.LONG_START_SEQUENCE) {
+        const coeff = WINDOW_SEQUENCES_TO_TRANSFORM_MODE[sce1.single.ics_info.window_sequence].coeffs;
+        const curr_coeff = coeff;
+        const next_coeff = WINDOW_SEQUENCES_TO_TRANSFORM_MODE[WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE].coeffs;
+
+        const frequencies = [...sce1.single.spectral_data.x_quant[0]]
+        for (let i = frequencies.length; i < coeff; i++) { frequencies.push(0); }
+        const samples: number[] = imdct(frequencies);
+
+        const curr_window = (this.prev_window_shape[0] ?? sce1.single.ics_info.window_shape) == 0 ? SIN_WINDOW(curr_coeff * 2) : KBD_WINDOW(curr_coeff * 2, 4);
+        const next_window = sce1.single.ics_info.window_shape == 0 ? SIN_WINDOW(next_coeff * 2) : KBD_WINDOW(next_coeff * 2, 6);
+
+        for (let i = 0; i < coeff; i++) {
+          samples[i] *= curr_window[i];
+        }
+        for (let i = coeff; i < coeff * 2; i++) {
+          if (i < (coeff + (coeff - next_coeff) / 2)) {
+            samples[i] *= 1;
+          } else if(i < (coeff + ((coeff - next_coeff) / 2)) + next_coeff) {
+            samples[i] *= next_window[i - (coeff + ((coeff - next_coeff) / 2)) + next_coeff];
+          } else {
+            samples[i] *= 0;
           }
         }
-        this.overlap = samples.slice(1024);
-        return samples.slice(0, 1024);
+
+        if (this.overlap[0] != null) {
+          for (let i = 0; i < coeff; i++) { samples[i] += this.overlap[0][i]; }
+        }
+
+        this.overlap[0] = samples.slice(coeff, coeff * 2);
+        this.prev_window_shape[0] = sce1.single.ics_info.window_shape;
+
+        return samples.slice(0, coeff);
+      } else if (sce1.single.ics_info.window_sequence === WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE) { 
+        const coeff = WINDOW_SEQUENCES_TO_TRANSFORM_MODE[sce1.single.ics_info.window_sequence].coeffs;
+        const short_coeff = coeff;
+        const long_coeff = WINDOW_SEQUENCES_TO_TRANSFORM_MODE[WINDOW_SEQUENCES.ONLY_LONG_SEQUENCE].coeffs;
+
+        const short_samples: number[][] = [];
+
+        const curr_window = (this.prev_window_shape[0] ?? sce1.single.ics_info.window_shape) == 0 ? SIN_WINDOW(coeff * 2) : KBD_WINDOW(coeff * 2, 4);
+        const next_window = sce1.single.ics_info.window_shape == 0 ? SIN_WINDOW(coeff * 2) : KBD_WINDOW(coeff * 2, 6);
+
+        for (let w = 0; w < sce1.single.ics_info.num_windows; w++) {
+          const frequencies = [...sce1.single.spectral_data.x_quant[w]];
+          while (frequencies.length < coeff) { frequencies.push(0); }
+          short_samples.push(imdct(frequencies));
+        }
+
+        const samples: number[] = [];
+        for (let i = 0; i < (long_coeff - short_coeff) / 2; i++) { samples.push(this.overlap[0] != null ? this.overlap[0][i] : 0); }
+        for (let w = 0; w < sce1.single.ics_info.num_windows; w++) {
+          for (let i = 0; i < short_coeff; i++) {
+            if (w === 0) {
+              samples.push((short_samples[w][i] * curr_window[i]) + (this.overlap[0] != null ? this.overlap[0][(long_coeff - short_coeff) / 2 + i] : 0));
+            } else {
+              const index = (long_coeff - short_coeff) / 2 + (w * coeff) + i;
+              samples[index] += short_samples[w][i] * next_window[i];
+            }
+          }
+          for (let i = short_coeff; i < short_coeff * 2; i++) {
+            samples.push(short_samples[w][i] * next_window[i]);
+          }
+        }
+        while (samples.length < long_coeff * 2) { samples.push(0); }
+
+        this.overlap[0] = samples.slice(long_coeff, long_coeff * 2);
+        this.prev_window_shape[0] = sce1.single.ics_info.window_shape;
+
+        return samples.slice(0, long_coeff);
+      } else if (sce1.single.ics_info.window_sequence === WINDOW_SEQUENCES.LONG_STOP_SEQUENCE) {
+        const coeff = WINDOW_SEQUENCES_TO_TRANSFORM_MODE[sce1.single.ics_info.window_sequence].coeffs;
+        const curr_coeff = WINDOW_SEQUENCES_TO_TRANSFORM_MODE[WINDOW_SEQUENCES.EIGHT_SHORT_SEQUENCE].coeffs;
+        const next_coeff = coeff;
+
+        const frequencies = [...sce1.single.spectral_data.x_quant[0]]
+        for (let i = frequencies.length; i < coeff; i++) { frequencies.push(0); }
+        const samples: number[] = imdct(frequencies);
+
+        const curr_window = (this.prev_window_shape[0] ?? sce1.single.ics_info.window_shape) == 0 ? SIN_WINDOW(curr_coeff * 2) : KBD_WINDOW(curr_coeff * 2, 6);
+        const next_window = sce1.single.ics_info.window_shape == 0 ? SIN_WINDOW(next_coeff * 2) : KBD_WINDOW(next_coeff * 2, 4);
+
+        for (let i = 0; i < coeff; i++) {
+          if (i < (coeff - curr_coeff) / 2) {
+            samples[i] *= 0;
+          } else if(i < ((coeff - curr_coeff) / 2) + curr_coeff) {
+            samples[i] *= curr_window[i - ((coeff - curr_coeff) / 2)];
+          } else {
+            samples[i] *= 1;
+          }
+        }
+        for (let i = 0; i < coeff; i++) {
+          samples[i] *= next_window[coeff];
+        }
+        for (let i = coeff; i < coeff * 2; i++) {
+          samples[i] *= next_window[i];
+        }
+        if (this.overlap[0] != null) {
+          for (let i = 0; i < coeff; i++) { samples[i] += this.overlap[0][i]; }
+        }
+
+        this.overlap[0] = samples.slice(coeff, coeff * 2);
+        this.prev_window_shape[0] = sce1.single.ics_info.window_shape;
+
+        return samples.slice(0, coeff);
+      } else {
+        throw Error('Not Implemented Yet!');
       }
     } else if (sce2) {
       return null;
